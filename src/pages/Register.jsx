@@ -1,52 +1,81 @@
-// src/pages/Register.jsx
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "../utils/api";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // Add this import
 
-export default function Register() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+function Register() {
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: ""
+    // branch and semester removed
+  });
+
+  const navigate = useNavigate();
+  const { isLoggedIn } = useAuth(); // Use AuthContext
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate("/dashboard"); // Redirect to dashboard if logged in
+    }
+  }, [isLoggedIn, navigate]);
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("/users/register", { name, email, password });
-      localStorage.setItem("token", res.data.token);
-      alert("Registered successfully!");
+      await axios.post("/register", formData);
+      alert("Registration successful! You can now login.");
+      navigate("/login");
     } catch (err) {
-      alert(err.response.data.message || "Registration failed");
+      alert(err.response?.data?.msg || "Registration failed");
     }
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10">
-      <h2 className="text-2xl mb-4">Register</h2>
-      <form onSubmit={handleRegister} className="space-y-4">
-        <input
-          className="w-full p-2 border"
-          type="text"
-          placeholder="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <input
-          className="w-full p-2 border"
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          className="w-full p-2 border"
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button className="bg-green-600 text-white px-4 py-2" type="submit">
-          Register
-        </button>
-      </form>
-    </div>
+    <form
+      onSubmit={handleRegister}
+      className="bg-white p-6 rounded-xl shadow-md space-y-4 w-96 mx-auto mt-20"
+    >
+      <h2 className="text-2xl font-bold text-center">Register</h2>
+      <input
+        type="text"
+        name="username"
+        placeholder="Username"
+        className="w-full p-2 border rounded"
+        value={formData.username}
+        onChange={handleChange}
+      />
+      <input
+        type="email"
+        name="email"
+        placeholder="Email"
+        className="w-full p-2 border rounded"
+        value={formData.email}
+        onChange={handleChange}
+      />
+      <input
+        type="password"
+        name="password"
+        placeholder="Password"
+        className="w-full p-2 border rounded"
+        value={formData.password}
+        onChange={handleChange}
+      />
+      <button
+        type="submit"
+        className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+      >
+        Register
+      </button>
+    </form>
   );
 }
+
+export default Register;
